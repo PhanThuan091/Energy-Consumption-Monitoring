@@ -1,22 +1,13 @@
-// Enable debug console
-// Set CORE_DEBUG_LEVEL = 3 first
 #define ERA_DEBUG
-// #define ERA_SERIAL Serial
-
-/* Select ERa host location (VN: Viet Nam, SG: Singapore) */
 #define ERA_LOCATION_VN
-// #define ERA_LOCATION_SG
-
 #if defined(BUTTON_PIN)
 #include <pthread.h>
 #include <ERa\ERaButton.hpp> 
 #endif
 
-// Cấu hình wifi
 
+#define ERA_AUTH_TOKEN "d0f34f440"
 
-#define ERA_AUTH_TOKEN "84af8048-4e85-4479-b4f5-989d0f34f440"
-// #define ERA_AUTH_TOKEN "ERA2706"
 #include <Arduino.h>
 #include <ERa.hpp>
 #include <PZEM004Tv30.h>
@@ -25,12 +16,8 @@
 #define Relay_PIN 25
 #define Pir_PIN 35
 
-const char ssid[] = "Wi-MESH - HCMUTE";
-const char pass[] = "hcmute@2024";
-// const char ssid[] = "IoT Lab";
-// const char pass[] = "IoT@123456";
-// const char ssid[] = "YOUR_SSID";
-// const char pass[] = "YOUR_PASSWORD";
+const char ssid[] = "HCMUTE";
+const char pass[] = "";
 
 unsigned long lastMotionTime;
 uint8_t power_value = 100;
@@ -46,7 +33,6 @@ ERA_WRITE(V0) {
   ERa.virtualWrite(V0, digitalRead(LED_PIN));
 }
 
-/* This function will execute each time from the Text Box to your chip */
 ERA_WRITE(V1) {
   /* Get value from Virtual Pin 1 */
   ERaString estr = param.getString();
@@ -83,11 +69,10 @@ ERA_WRITE(V14) {
   // ERa.virtualWrite(V14, power_value);
 }
 
-/* This function will run every time ERa is connected */
 ERA_CONNECTED() {
   ERA_LOG("ERa", "ERa connected!");
 }
-/* This function will run every time ERa is disconnected */
+
 ERA_DISCONNECTED() {
   ERA_LOG("ERa", "ERa disconnected!");
 }
@@ -100,9 +85,7 @@ void timerEvent() {
   float energy = pzem.energy();
   float frequency = pzem.frequency();
   float pf = pzem.pf();
-  // string text = "Cảnh báo: Không có chuyển động và công suất >" + (string) power_value;
-
-  // Gửi các giá trị đo lường tới ERa
+   // Gửi các giá trị đo lường tới ERa
   ERa.virtualWrite(V3, voltage);
   ERa.virtualWrite(V4, current);
   ERa.virtualWrite(V5, power);
@@ -123,20 +106,13 @@ void timerEvent() {
   if (motionState == HIGH) {
     lastMotionTime = ERaMillis();
   }
- 
-  // Kiểm tra nếu đã quá 5 phút không có chuyển động và công suất > 1000W  300000ms
+
   if ((ERaMillis() - lastMotionTime >= 10000) && (power > power_val)) {
-    // Gửi cảnh báo lên ERa
-    // warningMessage = "Cảnh báo: Không có chuyển động và công suất > " ;
-    // ERa.virtualWrite(V12, warningMessage);
+
     ERa.virtualWrite(V13, 1);
     ERa.virtualWrite(V15, "Không có chuyển động và công suất tiêu thụ lớn!");
     Serial.print("Cảnh báo: Không có chuyển động và công suất tiêu thụ lớn hơn ");
-    
     Serial.println(power_val);
-    // digitalWrite(Relay_PIN, LOW);
-    // // Gửi trạng thái relay về
-    // ERa.virtualWrite(V10, digitalRead(Relay_PIN));
   } else {
     ERa.virtualWrite(V13, 0);
     ERa.virtualWrite(V15, "---");
@@ -144,9 +120,7 @@ void timerEvent() {
 
   // Kiểm tra nếu đã quá 5 phút không có chuyển động
   if (ERaMillis() - lastMotionTime >= 10000) {
-    // Tắt relay
     digitalWrite(Relay_PIN, LOW);
-    // Gửi trạng thái relay về
     ERa.virtualWrite(V10, digitalRead(Relay_PIN));
   }
 }
